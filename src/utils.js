@@ -2,21 +2,20 @@
 define(() => {
     const utils = {};
 
-    utils.toRad = (degrees) => (degrees*Math.PI)/180;
-
-    utils.defaultCompare = (a, b) => a === b;
-
-    utils.arrayWithValueRemoved = (array, value, compare = utils.defaultCompare) => 
-        array.filter((elem) => !compare(elem, value));
+    utils.contains = (array, element) => array.indexOf(element) !== -1;
     
-    utils.runInBackground = (task) => {
-        task();
+    utils.runEvery = (task, milliseconds) => { // Bad name?
         setTimeout(() => {
             utils.runInBackground(task);
-        }, 0);
+            task();
+        }, milliseconds);
     };
 
-    utils.contains = (array, element) => array.indexOf(element) !== -1;
+    utils.runInBackground = (task) => utils.runEvery(task, 0);
+
+    utils.randomElement = (array) => array[utils.randomRange(0, array.length)];
+    
+    utils.randomRange = (from, to) => from + Math.floor(Math.random() * (to-from));
 
     return utils;
 });

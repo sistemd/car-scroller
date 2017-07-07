@@ -1,31 +1,31 @@
-define(['tests/unitTesting.js', 'src/gameEngine/mechanics'], (unitTesting, mechanics) => {
+define(['tests/unitTesting.js', 'src/logic'], (unitTesting, logic) => {
     const mechanicsTests = {};
 
-    mechanicsTests.testPointsAreEqual = () => {
-        unitTesting.assertTrue(mechanics.pointsAreEqual(
+    mechanicsTests.pointsAreEqualTest = () => {
+        unitTesting.assertTrue(logic.pointsAreEqual(
             {x: 33, y: -2}, 
             {x: 33, y: -2}
         ));
 
-        unitTesting.assertFalse(mechanics.pointsAreEqual(
+        unitTesting.assertFalse(logic.pointsAreEqual(
             {x: 1, y: 42},
             {x: 2, y: 42}
         ));
 
-        unitTesting.assertFalse(mechanics.pointsAreEqual(
+        unitTesting.assertFalse(logic.pointsAreEqual(
             {x: 1, y: 42},
             {x: 1, y: 43}
         ));
 
-        unitTesting.assertFalse(mechanics.pointsAreEqual(
+        unitTesting.assertFalse(logic.pointsAreEqual(
             {x: 1, y: 42},
             {x: 2, y: 43}
         ));
     };
 
-    mechanicsTests.testPointsAdded = () => {
+    mechanicsTests.pointsAddedTest = () => {
         const testAdditionFor = ({point1, point2, result}) => unitTesting.assertTrue(
-            mechanics.pointsAreEqual(mechanics.pointsAdded(point1, point2), result)
+            logic.pointsAreEqual(logic.pointsAdded(point1, point2), result)
         );
 
         testAdditionFor({
@@ -47,9 +47,9 @@ define(['tests/unitTesting.js', 'src/gameEngine/mechanics'], (unitTesting, mecha
         });
     };
 
-    mechanicsTests.testPointsSubtracted = () => {
+    mechanicsTests.pointsSubtractedTest = () => {
         const testSubtractionFor = ({point1, point2, result}) => unitTesting.assertTrue(
-            mechanics.pointsAreEqual(mechanics.pointsSubtracted(point1, point2), result)
+            logic.pointsAreEqual(logic.pointsSubtracted(point1, point2), result)
         );
 
         testSubtractionFor({
@@ -71,8 +71,8 @@ define(['tests/unitTesting.js', 'src/gameEngine/mechanics'], (unitTesting, mecha
         });
     };
 
-    mechanicsTests.testInternalKeyTracker = () => {
-        const keyTracker = new mechanics.internal.KeyTracker();
+    mechanicsTests.internalKeyTrackerTest = () => {
+        const keyTracker = new logic.internal.KeyTracker();
         
         unitTesting.assertFalse(keyTracker.keyIsDown('Enter'));
         unitTesting.assertFalse(keyTracker.keyIsDown('ArrowUp'));

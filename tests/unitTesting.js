@@ -27,14 +27,22 @@ define(() => {
         for (let testName in suite) {
             try {
                 suite[testName]();
-                console.log(`${testName} passed`);
+                console.log(`  Passed ${testName}`);
             } catch (e) {
-                console.log(`${testName} FAILED`);
+                console.log(`  FAILED ${testName}`);
                 if (!e instanceof unitTesting.AssertionFailed)
                     console.log(`Due to exception ${e}`);
             }
         }
     };
+
+    unitTesting.runEachTestSuite = (suites) => {
+        for (const suiteName in suites) {
+            console.log(`Test suite: ${suiteName}`);
+            unitTesting.runTestSuite(suites[suiteName]);
+            console.log('');
+        }
+    }
     
     return unitTesting;
 });

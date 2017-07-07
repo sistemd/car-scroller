@@ -1,101 +1,57 @@
 'use strict';
 
-require(['src/gameEngine/graphics', 'src/gameEngine/mechanics', 'src/utils'], 
-        (graphics, mechanics, utils) => {
+require(['src/graphics', 'src/logic', 'src/utils'], 
+        (graphics, logic, utils) => {
+    const main = () => {
+        let distanceTraveled = 0;
 
-    const game = {};
-
-    game.startTrackingUserInput = (playerCar) => {
-        const keyHandler = new mechanics.KeyHandler(['ArrowLeft', 'ArrowRight'], document);
-        utils.runInBackground(() => {
-            if (keyHandler.keyIsDown('ArrowLeft'))
-                playerCar.moveLeft();
-            if (keyHandler.keyIsDown('ArrowRight'))
-                playerCar.moveRight();
-        });
-    }
-
-    game.EnemyCar = class {
-        constructor(x) {
-            this._x = x;
-            this._y = 0;
-        }
-
-        updatePosition(speed) {
-            this._y += speed;
-        }
-
-        get x() {
-            return this._x;
-        }
-
-        get y() {
-            return this._y;
-        }
-    };
-
-    game.EnemyCars = class {
-        constructor() {
-            this.cars = [];
-        }
-
-
-    };
-
-    game.randomColor = () => {
-
-    };
-
-    game.main = () => {
         const canvas = new graphics.Canvas(document);
 
-        const playerCar = {
-            position: {
-                _x: 0,
-                _y: 100,
-                
-                get x() {
-                    return this._x;
-                },
-
-                set x(value) {
-                    if (value >= 0 && value <= canvas.width - 10)
-                        this._x = value;
-                },
-
-                get y() {
-                    return this._y;
-                }
-            },
-
-            speed: 3,
-            color: game.randomColor(),
-
-            moveLeft() {
-                this.position.x -= this.speed;
-            },
-
-            moveRight() {
-                this.position.x += this.speed;
-            },
-
-            draw() {
-                canvas.drawRectangle({
-                    x: this.position.x,
-                    y: this.position.y,
-                    width: 10,
-                    height: 10
-                }, 'blue');
+        const drawCar = (car) => {
+            const parts = car.physicalParts();
+            for (const part in parts) {
+                canvas.drawRect(parts[part].rect, parts[part].color);
             }
         };
 
-        game.startTrackingUserInput(playerCar);
+        const clearCar = (car) => {
+            canvas.clearRect({
+                x: car.position.x, 
+                y: car.position.y, 
+                width: logic.carParts.constants.carWidth, 
+                height: logic.carParts.constants.carHeight});
+        };
 
-        utils.runInBackground(() => {
-            canvas.clear();
-            playerCar.draw();
-        });
+        const playerCar = new logic.PlayerCar();
+
+        canvas.width = logic.constants.mapWidth;
+        canvas.height = logic.constants.mapHeight;
+
+        const enemyCars = [];
+
+        const startTrackingUserInput = () => {
+            const keyHandler = new logic.KeyHandler(['ArrowLeft', 'ArrowRight'], document);
+            utils.runInBackground(() => {
+                clearCar(playerCar);
+                if (keyHandler.keyIsDown('ArrowLeft'))
+                    playerCar.moveLeft();
+                if (keyHandler.keyIsDown('ArrowRight'))
+                    playerCar.moveRight();
+                canvas.context.translate(0, playerCar.speed); // Make a special class to follow the player
+                playerCar.moveUp();
+                drawCar(playerCar);
+
+                for (const enemyCar of enemyCars)
+                    drawCar(enemyCar);
+            });
+        };
+
+        utils.runEvery(() => {
+            enemyCars.push(new logic.EnemyCar(playerCar.position.y-logic.constants.mapHeight));
+        }, 3000);
+
+        startTrackingUserInput();
     };
 
-    game.main();
+    main();
 });

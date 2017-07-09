@@ -212,7 +212,7 @@ define(['src/utils'], (utils) => {
         return cars.filter(carIsOnScreen);
     };
 
-    logic.moveCarsDown = (cars, speed) => {
+    logic.Down = (cars, speed) => {
         for (const car of cars)
             car.moveDown(speed);
     };
@@ -264,6 +264,72 @@ define(['src/utils'], (utils) => {
     logic.activeCars = (cars) => {
         const isActive = (car) => car.position.y < logic.constants.mapHeight;
         return cars.filter(isActive);
+    };
+
+    logic.GameView = class {
+        constructor(fixedObject) {
+            this.viewedObjects = [];
+        }
+
+        addStillObject(object) {
+            addMovingObject(object, utils.id(0));
+            return this;
+        }
+
+        addMovingObject(object, speedCalculator) {
+            this.viewedObjects.push({
+                object,
+                speedCalculator
+            });
+            return this;
+        }
+
+        moveEverythingUp(speed) {
+            for (const viewedObject of this.viewedObjects)
+                viewedObject.y += speed-viewedObject.speedCalculator();
+        }
+    };
+
+    logic.Game = class {
+        constructor({gameOverChecker, onGameOver}) {
+            this.eachFrameCallbacks = [];
+            this.gameOverChecker = gameOverChecker;
+            this.onGameOver = onGameOver;
+            this.gameOver = false;
+        }
+
+        run() {
+            utils.runInBackground(() => {
+                if (!this.gameOver) {
+                    this.callEachFrameCallbacks();
+                    this.checkGameOver();
+                }
+            });
+        }
+
+        checkGameOver() {
+            if (this.gameOverChecker()) {
+                this.gameOver = true;
+                this.onGameOver();
+            }
+        }
+
+        callEachFrameCallbacks() {
+            for (const callback of this.eachFrameCallbacks)
+                callback();
+        }
+
+        addEachFrameCallback(callback) {
+            this.eachFrameCallbacks.push(callback);
+            return this;
+        }
+
+        runEveryCalculated(task, milliseconds) {
+            utils.runEveryCalculated(() => {
+                if (!this.gameOver)
+                    task();
+            }, milliseconds)
+        }
     };
 
     return logic;

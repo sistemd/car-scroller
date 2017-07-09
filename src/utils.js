@@ -19,5 +19,7 @@ define(() => {
     
     utils.randomRange = (from, to) => from + Math.floor(Math.random() * (to-from));
 
+    utils.id = value => (() => value);
+
     return utils;
 });

@@ -8,66 +8,88 @@
 require(['src/graphics', 'src/logic', 'src/utils'], 
         (graphics, logic, utils) => {
     const main = () => {
-        let distanceTraveled = 0;
-
         const canvas = new graphics.Canvas(document);
+
+        canvas.width = logic.constants.mapWidth;
+        canvas.height = logic.constants.mapHeight;
 
         const drawCar = (car) => {
             for (const part of car.physicalParts())
                 canvas.drawRect(part.rect, part.color);
         };
 
-        const playerCar = logic.PlayerCar.atDefaultPosition();
-
-        canvas.width = logic.constants.mapWidth;
-        canvas.height = logic.constants.mapHeight;
-
-        let enemyCars = [];
-
-        let gameOver = false;
-
-        const startTrackingUserInput = () => {
-            const keyHandler = new logic.KeyHandler(['ArrowLeft', 'ArrowRight'], document);
-            utils.runInBackground(() => {
-                if (gameOver) {
-                    return;
-                }
-                
-                const speed = logic.speedBasedOnDistanceTraveled(distanceTraveled);
-                distanceTraveled += speed;
-                canvas.clear();
-                if (keyHandler.keyIsDown('ArrowLeft'))
-                    playerCar.moveLeft(speed, 0);
-                if (keyHandler.keyIsDown('ArrowRight'))
-                    playerCar.moveRight(speed, logic.constants.mapWidth-logic.carParts.constants.carWidth);
-                logic.moveCarsDown(enemyCars, speed);
-                console.log('Before', enemyCars.length);
-                enemyCars = logic.activeCars(enemyCars);
-                console.log('After', enemyCars.length);
-                drawCar(playerCar);
-
-                for (const enemyCar of enemyCars) {
-                    drawCar(enemyCar);
-                }
-
-                for (const enemyCar of enemyCars) {
-                    if (logic.carsCrashed(enemyCar, playerCar)) {
-                        alert(`Score: ${Math.floor(distanceTraveled/1000)}`);
-                        gameOver = true;
-                    }
-                }
-            });
+        const drawEnemyCars = (enemyCars) => {
+            for (const enemyCar of enemyCars)
+                drawCar(enemyCar);
         };
 
-        utils.runEveryCalculated(() => {
-            if (gameOver) {
-                return; // Abstractions are fucked up
-            }
+        const playerCar = logic.PlayerCar.atDefaultPosition();
+        let enemyCars = [];
 
-            enemyCars.push(logic.EnemyCar.atRandomPosition());
+        const crashHasHappened = () => {
+            for (const enemyCar of enemyCars)
+                if (logic.carsCrashed(enemyCar, playerCar))
+                    return true;
+            return false;
+        };
+
+        const showScore = () => {
+            alert(`Score: ${Math.floor(distanceTraveled/1000)}`);
+        };
+
+        const clearCanvas = () => canvas.clear();
+
+        let distanceTraveled = 0;
+
+        const enemyCarSpeed = () => logic.speedBasedOnDistanceTraveled(distanceTraveled);
+
+        const playerCarSpeed = () => playerCarSpeed()*2;
+
+        const gameView = new logic.GameView()
+            .addMovingObject(playerCar, playerCarSpeed);
+
+        const moveAllObjects = () => {
+            const speed = playerCarSpeed();
+            distanceTraveled += speed;
+            gameView.moveEverythingUp(speed);
+            if (keyHandler.keyIsDown('ArrowLeft'))
+                playerCar.moveLeft(speed, 0);
+            if (keyHandler.keyIsDown('ArrowRight'))
+                playerCar.moveRight(speed, logic.constants.mapWidth-logic.carParts.constants.carWidth);
+        };
+
+        const destroyOffscreenObjects = () => {
+            enemyCars = logic.activeCars(enemyCars);
+        };
+
+        const drawEverything = () => {
+            drawCar(playerCar);
+            for (const enemyCar of enemyCars)
+                drawCar(enemyCar);
+        };
+
+        const keyHandler = new logic.KeyHandler(['ArrowLeft', 'ArrowRight'], document);
+
+        const game = new logic.Game({
+            gameOverChecker: crashHasHappened,
+            onGameOver: showScore
+        });
+
+        game.addEachFrameCallback(clearCanvas)
+            .addEachFrameCallback(moveAllObjects)
+            .addEachFrameCallback(destroyOffscreenObjects)
+            .addEachFrameCallback(drawEverything);
+        
+        const createNewEnemyCar = () => {
+            const enemyCar = logic.EnemyCar.atRandomPosition();
+            gameView.addMovingObject(enemyCar, enemyCarSpeed);
+        };
+
+        game.runEveryCalculated(() => {
+            ;
         }, () => 1600/logic.speedBasedOnDistanceTraveled(distanceTraveled));
 
-        startTrackingUserInput();
+        game.run();
     };
 
     main();

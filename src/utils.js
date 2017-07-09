@@ -3,13 +3,15 @@ define(() => {
     const utils = {};
 
     utils.contains = (array, element) => array.indexOf(element) !== -1;
-    
-    utils.runEvery = (task, milliseconds) => { // Bad name?
+
+    utils.runEveryCalculated = (task, millisecondsGetter) => {
         setTimeout(() => {
-            utils.runInBackground(task);
+            utils.runEveryCalculated(task, millisecondsGetter);
             task();
-        }, milliseconds);
-    };
+        }, millisecondsGetter());
+    }
+
+    utils.runEvery = (task, milliseconds) => utils.runEveryCalculated(task, () => milliseconds);
 
     utils.runInBackground = (task) => utils.runEvery(task, 0);
 

@@ -1,5 +1,10 @@
 'use strict';
 
+// Problems:
+// No clearing
+// Convoluted main code
+// Somewhat bad rectanglesAreOverlapped code
+
 require(['src/graphics', 'src/logic', 'src/utils'], 
         (graphics, logic, utils) => {
     const main = () => {
@@ -8,47 +13,59 @@ require(['src/graphics', 'src/logic', 'src/utils'],
         const canvas = new graphics.Canvas(document);
 
         const drawCar = (car) => {
-            const parts = car.physicalParts();
-            for (const part in parts) {
-                canvas.drawRect(parts[part].rect, parts[part].color);
-            }
+            for (const part of car.physicalParts())
+                canvas.drawRect(part.rect, part.color);
         };
 
-        const clearCar = (car) => {
-            canvas.clearRect({
-                x: car.position.x, 
-                y: car.position.y, 
-                width: logic.carParts.constants.carWidth, 
-                height: logic.carParts.constants.carHeight});
-        };
-
-        const playerCar = new logic.PlayerCar();
+        const playerCar = logic.PlayerCar.atDefaultPosition();
 
         canvas.width = logic.constants.mapWidth;
         canvas.height = logic.constants.mapHeight;
 
-        const enemyCars = [];
+        let enemyCars = [];
+
+        let gameOver = false;
 
         const startTrackingUserInput = () => {
             const keyHandler = new logic.KeyHandler(['ArrowLeft', 'ArrowRight'], document);
             utils.runInBackground(() => {
-                clearCar(playerCar);
+                if (gameOver) {
+                    return;
+                }
+                
+                const speed = logic.speedBasedOnDistanceTraveled(distanceTraveled);
+                distanceTraveled += speed;
+                canvas.clear();
                 if (keyHandler.keyIsDown('ArrowLeft'))
-                    playerCar.moveLeft();
+                    playerCar.moveLeft(speed, 0);
                 if (keyHandler.keyIsDown('ArrowRight'))
-                    playerCar.moveRight();
-                canvas.context.translate(0, playerCar.speed); // Make a special class to follow the player
-                playerCar.moveUp();
+                    playerCar.moveRight(speed, logic.constants.mapWidth-logic.carParts.constants.carWidth);
+                logic.moveCarsDown(enemyCars, speed);
+                console.log('Before', enemyCars.length);
+                enemyCars = logic.activeCars(enemyCars);
+                console.log('After', enemyCars.length);
                 drawCar(playerCar);
 
-                for (const enemyCar of enemyCars)
+                for (const enemyCar of enemyCars) {
                     drawCar(enemyCar);
+                }
+
+                for (const enemyCar of enemyCars) {
+                    if (logic.carsCrashed(enemyCar, playerCar)) {
+                        alert(`Score: ${Math.floor(distanceTraveled/1000)}`);
+                        gameOver = true;
+                    }
+                }
             });
         };
 
-        utils.runEvery(() => {
-            enemyCars.push(new logic.EnemyCar(playerCar.position.y-logic.constants.mapHeight));
-        }, 3000);
+        utils.runEveryCalculated(() => {
+            if (gameOver) {
+                return; // Abstractions are fucked up
+            }
+
+            enemyCars.push(logic.EnemyCar.atRandomPosition());
+        }, () => 1600/logic.speedBasedOnDistanceTraveled(distanceTraveled));
 
         startTrackingUserInput();
     };

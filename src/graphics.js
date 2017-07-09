@@ -15,9 +15,9 @@ define(['src/utils'], (utils) => {
             this.context.fillStyle = color;
             this.context.fillRect(x, y, width, height);
         }
-        
-        clearRect({x, y, width, height}) {
-            this.context.clearRect(x, y, width, height);
+
+        clear() {
+            this.context.clearRect(0, 0, this.width, this.height);
         }
 
         get width() {
@@ -68,16 +68,6 @@ define(['src/utils'], (utils) => {
         const result = new Image();
         result.src = src;
         return result;
-    };
-
-    graphics.EnemyCarSpawner = class { // Why am I here I am so lost
-        constructor() {
-            this.cars = [];
-        }
-
-        createNewCar(playerCar) {
-            this.cars.push(new logic.EnemyCar(playerCar.position.y-logic.constants.mapHeight));
-        }
     };
 
     return graphics;

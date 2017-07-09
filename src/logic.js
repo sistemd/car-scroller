@@ -81,9 +81,7 @@ define(['src/utils'], (utils) => {
             };
         };
 
-        const result = {};
-
-        result.bonnet = {
+        const bonnet = {
             rect: {
                 x: position.x+logic.carParts.constants.tireWidth*2, 
                 y: position.y, 
@@ -92,37 +90,35 @@ define(['src/utils'], (utils) => {
             },
             color
         };
-        result.roof = {
+        const roof = {
             rect: {
                 x: position.x+logic.carParts.constants.tireWidth, 
-                y: result.bonnet.rect.y+logic.carParts.constants.bonnetHeight, 
+                y: bonnet.rect.y+logic.carParts.constants.bonnetHeight, 
                 width: logic.carParts.constants.roofWidth,
                 height: logic.carParts.constants.roofHeight
             },
             color
         };
-        result.frontLeftTire = tire({
+        const frontLeftTire = tire({
             x: position.x, // TODO Remove these constants baked in here
-            y: result.roof.rect.y+5
+            y: roof.rect.y+5
         });
-        result.bottomLeftTire = tire({
+        const bottomLeftTire = tire({
             x: position.x, 
-            y: result.roof.rect.y+logic.carParts.constants.roofHeight-20
+            y: roof.rect.y+logic.carParts.constants.roofHeight-20
         });
-        result.frontRightTire = tire({
-            x: result.roof.rect.x+logic.carParts.constants.roofWidth, 
-            y: result.roof.rect.y+5
+        const frontRightTire = tire({
+            x: roof.rect.x+logic.carParts.constants.roofWidth, 
+            y: roof.rect.y+5
         });
-        result.bottomRightTire = tire({
-            x: result.roof.rect.x+logic.carParts.constants.roofWidth, 
-            y: result.roof.rect.y+logic.carParts.constants.roofHeight-20
+        const bottomRightTire = tire({
+            x: roof.rect.x+logic.carParts.constants.roofWidth, 
+            y: roof.rect.y+logic.carParts.constants.roofHeight-20
         });
 
-        return result;
-    };
-
-    logic.carParts.facingDown = (position) => {
-        return logic.carParts.facingUp(position);
+        return [
+            bonnet, roof, frontLeftTire, bottomLeftTire, frontRightTire, bottomRightTire
+        ];
     };
 
     logic.carParts.constants.tireWidth = 7;
@@ -147,61 +143,128 @@ define(['src/utils'], (utils) => {
         }
     };
 
+    logic.constants.baseSpeed = 3;
+    logic.constants.maxSpeed = 5;
+
+    logic.speedBasedOnDistanceTraveled = (distanceTraveled) => {
+        const speed = Math.abs(distanceTraveled/5000)+logic.constants.baseSpeed;
+        return (speed > logic.constants.maxSpeed) ? logic.constants.maxSpeed : speed;
+    };
+
     logic.PlayerCar = class extends logic.RandomlyColored {
-        constructor() {
-            super();
-            this.position = {
-                x: 0,
+        static atDefaultPosition(){
+            return new logic.PlayerCar({
+                x: logic.constants.mapWidth/2,
                 y: logic.constants.mapHeight-logic.carParts.constants.carHeight
-            };
-            this.baseSpeed = 3;
-            this.maxSpeed = 7;
+            });
         }
 
-        get distanceTraveled() {
-            return this.position.y;
-        }
-
-        get speed() {
-            const speed = Math.floor(Math.abs(this.distanceTraveled/5000))+this.baseSpeed;
-            return (speed > this.maxSpeed) ? this.maxSpeed : speed;
+        constructor(position) {
+            super();
+            this.position = position;
         }
 
         physicalParts() {
             return logic.carParts.facingUp(this.position, this.color);
         }
 
-        setXIfAllowed(newX) {
-            if (newX >= 0 && newX <= logic.constants.mapWidth-logic.carParts.constants.carWidth)
-                this.position.x = newX;
+        moveLeft(speed, leftBoundary) {
+            this.position.x = logic.xFilteredThroughLeftBoundary(
+                this.position.x-speed, leftBoundary
+            );
         }
 
-        moveLeft() {
-            this.setXIfAllowed(this.position.x-this.speed);
-        }
-
-        moveRight() {
-            this.setXIfAllowed(this.position.x+this.speed);
-        }
-
-        moveUp() {
-            this.position.y -= this.speed;
+        moveRight(speed, rightBoundary) {
+            this.position.x = logic.xFilteredThroughRightBoundary(
+                this.position.x+speed, rightBoundary
+            );
         }
     };
 
+    logic.xFilteredThroughRightBoundary = (x, rightBoundary) => (x > rightBoundary) ? rightBoundary : x;
+
+    logic.xFilteredThroughLeftBoundary = (x, leftBoundary) => (x < leftBoundary) ? leftBoundary : x;
+
     logic.EnemyCar = class extends logic.RandomlyColored {
-        constructor(y) {
-            super();
-            this.position = {
+        static atRandomPosition() {
+            return new logic.EnemyCar({
                 x: canvas.width/logic.constants.laneCount*utils.randomRange(0, logic.constants.laneCount), 
-                y
-            };
+                y: -logic.carParts.constants.carHeight
+            });
+        }
+
+        constructor(position) {
+            super();
+            this.position = position;
+        }
+
+        moveDown(speed) {
+            this.position.y += speed;
         }
 
         physicalParts() {
-            return logic.carParts.facingDown(this.position, this.color);
+            return logic.carParts.facingUp(this.position, this.color);
         }
     };
-    
+
+    logic.onScreenCars = (cars) => {
+        const carIsOnScreen = (car) => car.position.y < -logic.constants.mapHeight;
+        return cars.filter(carIsOnScreen);
+    };
+
+    logic.moveCarsDown = (cars, speed) => {
+        for (const car of cars)
+            car.moveDown(speed);
+    };
+
+    logic.rectanglesAreOverlapped = (rect1, rect2) => {
+        // Please fix this cancer
+        return logic.internal.rectanglePoints(rect1).some(point => logic.internal.pointIsInsideRectangle(point, rect2)) ||
+               logic.internal.rectanglePoints(rect2).some(point => logic.internal.pointIsInsideRectangle(point, rect1));
+    };
+
+    logic.internal.pointIsInsideRectangle = (point, rect) => {
+        const upperLeftRectPoint = logic.internal.upperLeftPoint(rect);
+        const lowerRightRectPoint = logic.internal.lowerRightPoint(rect);
+        return (point.x > upperLeftRectPoint.x && point.x < lowerRightRectPoint.x) &&
+               (point.y > upperLeftRectPoint.y && point.y < lowerRightRectPoint.y);
+    };
+
+    logic.internal.upperLeftPoint = (rect) => {
+        return {x: rect.x, y: rect.y};
+    };
+
+    logic.internal.upperRightPoint = (rect) => {
+        return {x: rect.x+rect.width, y: rect.y};
+    };
+
+    logic.internal.lowerLeftPoint = (rect) => {
+        return {x: rect.x, y: rect.y+rect.height};
+    };
+
+    logic.internal.lowerRightPoint = (rect) => {
+        return {x: rect.x+rect.width, y: rect.y+rect.height};
+    };
+
+    logic.internal.rectanglePoints = (rectangle) => [
+        logic.internal.upperLeftPoint(rectangle),
+        logic.internal.upperRightPoint(rectangle),
+        logic.internal.lowerLeftPoint(rectangle),
+        logic.internal.lowerRightPoint(rectangle)
+    ];
+
+    logic.carsCrashed = (c1, c2) => {
+        for (const part1 of c1.physicalParts())
+            for (const part2 of c2.physicalParts())
+                if (logic.rectanglesAreOverlapped(part1.rect, part2.rect))
+                    return true;
+        return false;
+    };
+
+    logic.activeCars = (cars) => {
+        const isActive = (car) => car.position.y < logic.constants.mapHeight;
+        return cars.filter(isActive);
+    };
+
     return logic;
 });

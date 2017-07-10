@@ -143,14 +143,6 @@ define(['src/utils'], (utils) => {
         }
     };
 
-    logic.constants.baseSpeed = 3;
-    logic.constants.maxSpeed = 5;
-
-    logic.speedBasedOnDistanceTraveled = (distanceTraveled) => {
-        const speed = Math.abs(distanceTraveled/5000)+logic.constants.baseSpeed;
-        return (speed > logic.constants.maxSpeed) ? logic.constants.maxSpeed : speed;
-    };
-
     logic.PlayerCar = class extends logic.RandomlyColored {
         static atDefaultPosition(){
             return new logic.PlayerCar({
@@ -159,24 +151,40 @@ define(['src/utils'], (utils) => {
             });
         }
 
+        static baseSpeed() {
+            return 5;
+        }
+
+        static maxSpeed() {
+            return 7;
+        }
+
         constructor(position) {
             super();
             this.position = position;
+            this.horizontalSpeed = this.verticalSpeed = 0;
+            this.updateSpeedBasedOnDistanceTraveled(0);
+        }
+
+        updateSpeedBasedOnDistanceTraveled(distanceTraveled) {
+            const newVerticalSpeed = Math.abs(distanceTraveled/5000)+logic.PlayerCar.baseSpeed();
+            this.horizontalSpeed = this.verticalSpeed = 
+                (newVerticalSpeed > logic.PlayerCar.maxSpeed()) ? logic.PlayerCar.maxSpeed() : newVerticalSpeed;
         }
 
         physicalParts() {
             return logic.carParts.facingUp(this.position, this.color);
         }
 
-        moveLeft(speed, leftBoundary) {
+        moveLeft(leftBoundary) {
             this.position.x = logic.xFilteredThroughLeftBoundary(
-                this.position.x-speed, leftBoundary
+                this.position.x-this.horizontalSpeed, leftBoundary
             );
         }
 
-        moveRight(speed, rightBoundary) {
+        moveRight(rightBoundary) {
             this.position.x = logic.xFilteredThroughRightBoundary(
-                this.position.x+speed, rightBoundary
+                this.position.x+this.horizontalSpeed, rightBoundary
             );
         }
     };
@@ -196,10 +204,7 @@ define(['src/utils'], (utils) => {
         constructor(position) {
             super();
             this.position = position;
-        }
-
-        moveDown(speed) {
-            this.position.y += speed;
+            this.verticalSpeed = 2;            
         }
 
         physicalParts() {
@@ -213,7 +218,7 @@ define(['src/utils'], (utils) => {
     };
 
     logic.rectanglesAreOverlapped = (rect1, rect2) => {
-        // Please fix this cancer
+        // Please fix this cancer????
         return logic.internal.rectanglePoints(rect1).some(point => logic.internal.pointIsInsideRectangle(point, rect2)) ||
                logic.internal.rectanglePoints(rect2).some(point => logic.internal.pointIsInsideRectangle(point, rect1));
     };
@@ -261,29 +266,23 @@ define(['src/utils'], (utils) => {
         return cars.filter(isActive);
     };
 
-    logic.GameView = class {
-        // this is where the width and height should go
-
-        constructor(fixedObject) {
-            this.viewedObjects = [];
+    logic.VerticalRelativitySystem = class {
+        static relativeTo({object, verticalSpeed}) {
+            return new logic.VerticalRelativitySystem({object, verticalSpeed});
         }
 
-        addStillObject(object) {
-            addMovingObject(object, utils.id(0));
-            return this;
+        constructor(centerObject) {
+            this.centerObject = centerObject;
+            this.elements = [];
         }
 
-        addMovingObject(object, verticalSpeedCalculator) {
-            this.viewedObjects.push({
-                object,
-                verticalSpeedCalculator
-            });
-            return this;
+        addElement(element) {
+            this.elements.push(element);
         }
 
-        moveEverythingUp(speed) {
-            for (const viewedObject of this.viewedObjects)
-                viewedObject.y += speed-viewedObject.verticalSpeedCalculator();
+        moveElements() {
+            for (const element of this.elements)
+                element.position.y += this.centerObject.verticalSpeed-element.verticalSpeed;
         }
     };
 

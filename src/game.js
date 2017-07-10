@@ -41,21 +41,22 @@ require(['src/graphics', 'src/logic', 'src/utils'],
 
         let distanceTraveled = 0;
 
-        const enemyCarSpeed = () => logic.speedBasedOnDistanceTraveled(distanceTraveled);
-
-        const playerCarSpeed = () => enemyCarSpeed()*2;
-
-        const gameView = new logic.GameView()
-            .addMovingObject(playerCar, playerCarSpeed);
-
         const moveAllObjects = () => {
-            const speed = playerCarSpeed();
-            distanceTraveled += speed;
-            gameView.moveEverythingUp(speed);
+            playerCar.updateSpeedBasedOnDistanceTraveled(distanceTraveled);
+
+            const relativitySystem = logic.VerticalRelativitySystem.relativeTo(playerCar);
+            
+            for (const enemyCar of enemyCars)
+                relativitySystem.addElement(enemyCar);
+
             if (keyHandler.keyIsDown('ArrowLeft'))
-                playerCar.moveLeft(speed, 0);
+                playerCar.moveLeft(0);
             if (keyHandler.keyIsDown('ArrowRight'))
-                playerCar.moveRight(speed, logic.constants.mapWidth-logic.carParts.constants.carWidth);
+                playerCar.moveRight(logic.constants.mapWidth-logic.carParts.constants.carWidth);
+
+            relativitySystem.moveElements();
+
+            distanceTraveled += playerCar.verticalSpeed;
         };
 
         const destroyOffscreenObjects = () => {
@@ -70,8 +71,6 @@ require(['src/graphics', 'src/logic', 'src/utils'],
 
         const keyHandler = new logic.KeyHandler(['ArrowLeft', 'ArrowRight'], document);
 
-        // For consistency and quality
-        // we should have both hspeed and vspeed calculators
         const game = new logic.Game({
             gameOverChecker: crashHasHappened,
             onGameOver: showScore
@@ -82,15 +81,9 @@ require(['src/graphics', 'src/logic', 'src/utils'],
             .addEachFrameCallback(destroyOffscreenObjects)
             .addEachFrameCallback(drawEverything);
         
-        const createNewEnemyCar = () => {
-            const enemyCar = logic.EnemyCar.atRandomPosition();
-            enemyCars.push(enemyCar);
-            gameView.addMovingObject(enemyCar, enemyCarSpeed);
-        };
-
-        game.runEveryCalculated(() => {
-            ;
-        }, () => 1600/logic.speedBasedOnDistanceTraveled(distanceTraveled));
+        game.runEveryCalculated(
+            () => enemyCars.push(logic.EnemyCar.atRandomPosition()), 
+            () => 2800/playerCar.verticalSpeed);
 
         game.run();
     };

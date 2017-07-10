@@ -43,7 +43,7 @@ require(['src/graphics', 'src/logic', 'src/utils'],
 
         const enemyCarSpeed = () => logic.speedBasedOnDistanceTraveled(distanceTraveled);
 
-        const playerCarSpeed = () => playerCarSpeed()*2;
+        const playerCarSpeed = () => enemyCarSpeed()*2;
 
         const gameView = new logic.GameView()
             .addMovingObject(playerCar, playerCarSpeed);
@@ -70,6 +70,8 @@ require(['src/graphics', 'src/logic', 'src/utils'],
 
         const keyHandler = new logic.KeyHandler(['ArrowLeft', 'ArrowRight'], document);
 
+        // For consistency and quality
+        // we should have both hspeed and vspeed calculators
         const game = new logic.Game({
             gameOverChecker: crashHasHappened,
             onGameOver: showScore
@@ -82,6 +84,7 @@ require(['src/graphics', 'src/logic', 'src/utils'],
         
         const createNewEnemyCar = () => {
             const enemyCar = logic.EnemyCar.atRandomPosition();
+            enemyCars.push(enemyCar);
             gameView.addMovingObject(enemyCar, enemyCarSpeed);
         };
 

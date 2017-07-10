@@ -212,11 +212,6 @@ define(['src/utils'], (utils) => {
         return cars.filter(carIsOnScreen);
     };
 
-    logic.Down = (cars, speed) => {
-        for (const car of cars)
-            car.moveDown(speed);
-    };
-
     logic.rectanglesAreOverlapped = (rect1, rect2) => {
         // Please fix this cancer
         return logic.internal.rectanglePoints(rect1).some(point => logic.internal.pointIsInsideRectangle(point, rect2)) ||
@@ -267,6 +262,8 @@ define(['src/utils'], (utils) => {
     };
 
     logic.GameView = class {
+        // this is where the width and height should go
+
         constructor(fixedObject) {
             this.viewedObjects = [];
         }
@@ -276,17 +273,17 @@ define(['src/utils'], (utils) => {
             return this;
         }
 
-        addMovingObject(object, speedCalculator) {
+        addMovingObject(object, verticalSpeedCalculator) {
             this.viewedObjects.push({
                 object,
-                speedCalculator
+                verticalSpeedCalculator
             });
             return this;
         }
 
         moveEverythingUp(speed) {
             for (const viewedObject of this.viewedObjects)
-                viewedObject.y += speed-viewedObject.speedCalculator();
+                viewedObject.y += speed-viewedObject.verticalSpeedCalculator();
         }
     };
 

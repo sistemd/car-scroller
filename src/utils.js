@@ -1,4 +1,5 @@
 'use strict';
+
 define(() => {
     const utils = {};
 
@@ -9,7 +10,7 @@ define(() => {
             utils.runEveryCalculated(task, millisecondsGetter);
             task();
         }, millisecondsGetter());
-    }
+    };
 
     utils.runEvery = (task, milliseconds) => utils.runEveryCalculated(task, () => milliseconds);
 

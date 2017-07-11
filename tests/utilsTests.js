@@ -1,3 +1,5 @@
+'use strict';
+
 define(['tests/unitTesting', 'src/utils'], (unitTesting, utils) => {
     const utilsTests = {};
 

@@ -1,3 +1,5 @@
+'use strict';
+
 define(['tests/unitTesting.js', 'src/logic'], (unitTesting, logic) => {
     const logicTests = {};
     const unitTestingExtensions = {};

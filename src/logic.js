@@ -357,5 +357,15 @@ define(['src/utils'], (utils) => {
         }
     };
 
+    logic.constants.cookieHighScoreKey = 'highscore';
+
+    logic.highScore = (cookie) => {
+        return cookie.read(logic.constants.cookieHighScoreKey);
+    };
+
+    logic.setHighScore = (cookie, highScore) => {
+        cookie.write(logic.constants.cookieHighScoreKey, highScore);
+    };
+
     return logic;
 });

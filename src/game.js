@@ -1,7 +1,7 @@
 'use strict';
 
-require(['src/graphics', 'src/logic', 'src/utils'], 
-        (graphics, logic, utils) => {
+require(['src/graphics', 'src/logic', 'src/utils', 'src/cookies'], 
+        (graphics, logic, utils, cookies) => {
     const main = () => {
         const canvas = new graphics.Canvas(document);
 
@@ -39,16 +39,28 @@ require(['src/graphics', 'src/logic', 'src/utils'],
                 canvas.drawRect(decoration.rect, decoration.color);
         };
 
+        let distanceTraveled = 0;
+
+        const scoreBasedOnDistanceTraveled = () => Math.floor(distanceTraveled/1000);
+
+        const cookie = new cookies.Cookie(document);
+
         const showScore = () => {
-            alert(`Final score: ${Math.floor(distanceTraveled/1000)}`);
+            const score = scoreBasedOnDistanceTraveled();
+            const highScore = logic.highScore(cookie);
+            console.log('High score: '+highScore);
+            let outputText = `Final score: ${score}.`;
+            if (!highScore || score > highScore) {
+                logic.setHighScore(cookie, score);
+                outputText = 'New high score!\n'+outputText;
+            }
+            alert(outputText);
         };
 
         const clearCanvas = () => {
             const backgroundColor = '#E6E6F5';
             canvas.clear(backgroundColor);
         }
-
-        let distanceTraveled = 0;
 
         const moveAllObjects = () => {
             playerCar.updateSpeedBasedOnDistanceTraveled(distanceTraveled);

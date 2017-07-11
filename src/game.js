@@ -1,8 +1,5 @@
 'use strict';
 
-// Problems:
-// Convoluted main code
-
 require(['src/graphics', 'src/logic', 'src/utils'], 
         (graphics, logic, utils) => {
     const main = () => {

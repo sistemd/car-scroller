@@ -2,6 +2,7 @@
 
 define(['src/utils'], (utils) => {
     const graphics = {
+        constants: {},
         internal: {}
     };
     
@@ -16,8 +17,13 @@ define(['src/utils'], (utils) => {
             this.context.fillRect(x, y, width, height);
         }
 
-        clear() {
-            this.context.clearRect(0, 0, this.width, this.height);
+        clear(backgroundColor) {
+            this.drawRect({
+                x: 0, 
+                y: 0, 
+                width: this.width, 
+                height: this.height
+            }, backgroundColor);
         }
 
         get width() {

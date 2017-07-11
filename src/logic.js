@@ -3,6 +3,7 @@
 define(['src/utils'], (utils) => {
     const logic = {
         constants: {},
+        decorations: {},
         internal: {}
     };
     
@@ -100,7 +101,7 @@ define(['src/utils'], (utils) => {
             color
         };
         const frontLeftTire = tire({
-            x: position.x, // TODO Remove these constants baked in here
+            x: position.x,
             y: roof.rect.y+5
         });
         const bottomLeftTire = tire({
@@ -146,8 +147,8 @@ define(['src/utils'], (utils) => {
     logic.PlayerCar = class extends logic.RandomlyColored {
         static atDefaultPosition(){
             return new logic.PlayerCar({
-                x: logic.constants.mapWidth/2,
-                y: logic.constants.mapHeight-logic.carParts.constants.carHeight
+                x: logic.constants.mapWidth/2-logic.carParts.constants.carWidth/2,
+                y: logic.constants.mapHeight-logic.carParts.constants.carHeight-5
             });
         }
 
@@ -218,7 +219,6 @@ define(['src/utils'], (utils) => {
     };
 
     logic.rectanglesAreOverlapped = (rect1, rect2) => {
-        // Please fix this cancer????
         return logic.internal.rectanglePoints(rect1).some(point => logic.internal.pointIsInsideRectangle(point, rect2)) ||
                logic.internal.rectanglePoints(rect2).some(point => logic.internal.pointIsInsideRectangle(point, rect1));
     };
@@ -261,9 +261,9 @@ define(['src/utils'], (utils) => {
         return false;
     };
 
-    logic.activeCars = (cars) => {
-        const isActive = (car) => car.position.y < logic.constants.mapHeight;
-        return cars.filter(isActive);
+    logic.activeObjects = (objects) => {
+        const isActive = (object) => object.position.y < logic.constants.mapHeight;
+        return objects.filter(isActive);
     };
 
     logic.VerticalRelativitySystem = class {
@@ -276,8 +276,8 @@ define(['src/utils'], (utils) => {
             this.elements = [];
         }
 
-        addElement(element) {
-            this.elements.push(element);
+        addElements(elementArray) {
+            this.elements.push(...elementArray);
         }
 
         moveElements() {
@@ -325,6 +325,35 @@ define(['src/utils'], (utils) => {
                 if (!this.gameOver)
                     task();
             }, milliseconds)
+        }
+    };
+
+    logic.decorations.constants = {};
+
+    logic.decorations.constants.roadDrawingWidth = 30;
+    logic.decorations.constants.roadDrawingHeight = 120;
+
+    logic.decorations.RoadDrawing = class {
+        static atDefaultPosition() {
+            return new logic.decorations.RoadDrawing({
+                x: logic.constants.mapWidth/2-logic.decorations.constants.roadDrawingWidth/2,
+                y: -logic.decorations.constants.roadDrawingHeight
+            });
+        }
+
+        constructor(position) {
+            this.position = position;
+            this.color = 'grey';
+            this.verticalSpeed = 0;
+        }
+
+        get rect() {
+            return {
+                x: this.position.x,
+                y: this.position.y,
+                width: logic.decorations.constants.roadDrawingWidth,
+                height: logic.decorations.constants.roadDrawingHeight
+            };
         }
     };
 

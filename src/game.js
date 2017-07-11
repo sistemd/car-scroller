@@ -13,24 +13,30 @@ require(['src/graphics', 'src/logic', 'src/utils'],
                 canvas.drawRect(part.rect, part.color);
         };
 
-        const drawDecorations = (decorations) => {
-            for (const decoration of decorations)
-                canvas.drawRect(decoration.rect, decoration.color);
+        const playerCar = logic.PlayerCar.atDefaultPosition();
+        let enemyCars = [];
+
+        const drawPlayerCar = () => {
+            drawCar(playerCar);
         };
 
-        const drawEnemyCars = (enemyCars) => {
+        const drawEnemyCars = () => {
             for (const enemyCar of enemyCars)
                 drawCar(enemyCar);
         };
-
-        const playerCar = logic.PlayerCar.atDefaultPosition();
-        let enemyCars = [];
 
         const crashHasHappened = () => {
             for (const enemyCar of enemyCars)
                 if (logic.carsCrashed(enemyCar, playerCar))
                     return true;
             return false;
+        };
+
+        let decorations = [];
+
+        const drawDecorations = () => {
+            for (const decoration of decorations)
+                canvas.drawRect(decoration.rect, decoration.color);
         };
 
         const showScore = () => {
@@ -43,8 +49,6 @@ require(['src/graphics', 'src/logic', 'src/utils'],
         }
 
         let distanceTraveled = 0;
-
-        let decorations = [];
 
         const moveAllObjects = () => {
             playerCar.updateSpeedBasedOnDistanceTraveled(distanceTraveled);
@@ -71,9 +75,9 @@ require(['src/graphics', 'src/logic', 'src/utils'],
         };
 
         const drawEverything = () => {
-            drawDecorations(decorations);
-            drawCar(playerCar);
-            drawEnemyCars(enemyCars);
+            drawDecorations();
+            drawPlayerCar();
+            drawEnemyCars();
         };
 
         const keyHandler = new logic.KeyHandler(['ArrowLeft', 'ArrowRight'], document);

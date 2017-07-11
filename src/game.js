@@ -34,7 +34,7 @@ require(['src/graphics', 'src/logic', 'src/utils'],
         };
 
         const showScore = () => {
-            alert(`Score: ${Math.floor(distanceTraveled/1000)}`);
+            alert(`Final score: ${Math.floor(distanceTraveled/1000)}`);
         };
 
         const clearCanvas = () => {

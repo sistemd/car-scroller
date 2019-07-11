@@ -1,18 +1,22 @@
-p#score {
-    margin: auto;  
-    position: absolute;
-    left:0;
-    right: 0;
-    top: 65%;
-    bottom: 0;
-    text-align: center;
+body, html {
+    width: 100%;
+    height: 100%;
+    margin: 0;
 }
 
-canvas {
-    margin: auto;  
-    position: absolute;
-    left:0;
-    right: 0;
-    top: 0;
-    bottom: 35%;
+div#display {
+    height: 100%;
+    display: flex;
+}
+
+div#child {
+    margin: auto;
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+div#child > * {
+    margin: auto;
 }

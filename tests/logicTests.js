@@ -1,6 +1,12 @@
 'use strict';
 
-define(['tests/unitTesting.js', 'src/logic'], (unitTesting, logic) => {
+const assert = require('assert');
+const logic = require('../src/game.js/index.js');
+
+function assertPointsAreEqual(p1, p1) {
+    return
+}
+
     const logicTests = {};
     const unitTestingExtensions = {};
 

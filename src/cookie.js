@@ -5,7 +5,7 @@ define(() => {
 
     cookies.Cookie = class {
         constructor(document) {
-            this.document  = document;
+            this.document = document;
         }
 
         read(key) {

@@ -37,6 +37,16 @@ export class Canvas {
     }
 };
 
+export class ScoreDisplay {
+    constructor(document) {
+        this.p = document.getElementById('score');
+    }
+
+    update(value) {
+        this.p.innerHTML = value.toString();
+    }
+}
+
 export function drawCar(canvas, car) {
     for (const part of car.physicalParts())
         canvas.drawRect(part.rect, part.color);

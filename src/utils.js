@@ -1,25 +1,47 @@
 'use strict';
 
-export function runEveryCalculated(task, millisecondsGetter) {
-    setTimeout(() => {
-        runEveryCalculated(task, millisecondsGetter);
-        task();
-    }, millisecondsGetter());
+export function repeatTask({task, milliseconds}) {
+    if (milliseconds === undefined) {
+        runTask(task);
+        return;
+    }
+
+    let timer = milliseconds();
+
+    runTask(timeDelta => {
+        timer -= timeDelta;
+
+        if (timer <= 0) {
+            timer = milliseconds();
+            task();
+        }
+    })
 }
 
-export function runEvery(task, milliseconds){
-    runEveryCalculated(task, () => milliseconds);
-}
+function runTask(task) {
+    let lastCall = null;
 
-export function runInBackground(task) {
-    runEvery(task, 0);
+    function step(timestamp) {
+        requestAnimationFrame(step);
+
+        if (lastCall === null) {
+            lastCall = timestamp;
+            return;
+        }
+
+        const timeDelta = timestamp - lastCall;
+        lastCall = timestamp;
+        task(timeDelta);
+    }
+
+    requestAnimationFrame(step);
 }
 
 export function randomElement(array) {
     return array[randomRange(0, array.length)];
 } 
 
-// min is included, max isn't
+// min is included in the range, max isn't
 export function randomRange(min, max) {
     return min + Math.floor(Math.random() * (max-min));
 }

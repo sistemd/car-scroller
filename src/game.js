@@ -1,10 +1,10 @@
 'use strict';
 
 import {carParts, carWidth, carHeight} from './carParts';
-import {randomRange, randomElement, rectanglesOverlap, runEveryCalculated, runInBackground} from './utils';
+import {randomRange, randomElement, rectanglesOverlap, repeatTask} from './utils';
 import {Cookie} from './cookie';
 import {RoadDrawing} from './decorations';
-import {Canvas, drawCar, drawCars, drawDecorations} from './graphics';
+import {Canvas, drawCar, drawCars, drawDecorations, ScoreDisplay} from './graphics';
 
 const laneCount = 6;
 const mapWidth = laneCount*carWidth;
@@ -16,6 +16,7 @@ export class Game {
         this.canvas = new Canvas(document);
         this.canvas.width = mapWidth;
         this.canvas.height = mapHeight;
+        this.scoreDisplay = new ScoreDisplay(document);
 
         this.playerCar = PlayerCar.atDefaultPosition();
         this.enemyCars = [];
@@ -24,23 +25,27 @@ export class Game {
         this.cookie = new Cookie(document);
         this.keyHandler = new KeyHandler(document);
 
-        this.runEveryCalculated(
-            () => this.enemyCars.push(EnemyCar.atRandomPosition()), 
-            () => 2800/this.playerCar.verticalSpeed);
-        
-        this.runEveryCalculated(
-            () => this.decorations.push(RoadDrawing.atDefaultPosition(mapWidth)),
-            () => 2000/this.playerCar.verticalSpeed);
+        this.repeatTaskWhileRunning({
+            task: () => this.enemyCars.push(EnemyCar.atRandomPosition()), 
+            milliseconds: () => 1000/this.playerCar.verticalSpeed
+        });
+
+        this.repeatTaskWhileRunning({
+            task: () => this.decorations.push(RoadDrawing.atDefaultPosition(mapWidth)),
+            milliseconds: () => 350/this.playerCar.verticalSpeed
+        });
     }
 
     run() {
-        runInBackground(() => {
-            if (!this.gameOver) {
-                this.clearCanvas();
-                this.moveAllObjects();
-                this.destroyOffscreenObjects();
-                this.drawEverything();
-                this.checkGameOver();
+        repeatTask({
+            task: timeDelta => {
+                if (!this.gameOver) {
+                    this.clearCanvas();
+                    this.moveAllObjects(timeDelta);
+                    this.destroyOffscreenObjects();
+                    this.drawEverything();
+                    this.checkGameOver();
+                }
             }
         });
     }
@@ -62,7 +67,7 @@ export class Game {
         let outputText = `Final score: ${score}.`;
         if (!highScore || score > highScore) {
             writeHighScore(this.cookie, score);
-            outputText = 'New high score!\n'+outputText;
+            outputText = `New high score!\n${outputText}`;
         }
         alert(outputText);
     }
@@ -71,7 +76,7 @@ export class Game {
         return Math.floor(this.distanceTraveled/1e3);
     }
 
-    moveAllObjects() {
+    moveAllObjects(timeDelta) {
         this.playerCar.updateSpeed(this.distanceTraveled);
 
         const relativitySystem = VerticalRelativitySystem.relativeTo(this.playerCar);
@@ -79,13 +84,13 @@ export class Game {
         relativitySystem.addElements(this.decorations);
         
         if (this.keyHandler.keyIsDown('ArrowLeft'))
-            this.playerCar.moveLeft(0);
+            this.playerCar.moveLeft(0, timeDelta);
         if (this.keyHandler.keyIsDown('ArrowRight'))
-            this.playerCar.moveRight(mapWidth-carWidth);
+            this.playerCar.moveRight(mapWidth-carWidth, timeDelta);
 
-        relativitySystem.moveElements();
+        relativitySystem.moveElements(timeDelta);
 
-        this.distanceTraveled += this.playerCar.verticalSpeed;
+        this.distanceTraveled += this.playerCar.verticalSpeed * timeDelta;
     }
 
     destroyOffscreenObjects() {
@@ -101,13 +106,17 @@ export class Game {
         drawDecorations(this.canvas, this.decorations);
         drawCar(this.canvas, this.playerCar);
         drawCars(this.canvas, this.enemyCars);
+        this.scoreDisplay.update(this.calculateScore());
     }
 
-    runEveryCalculated(task, milliseconds) {
-        runEveryCalculated(() => {
-            if (!this.gameOver)
-                task();
-        }, milliseconds)
+    repeatTaskWhileRunning({task, milliseconds}) {
+        repeatTask({
+            task: () => {
+                if (!this.gameOver)
+                    task();
+            },
+            milliseconds
+        });
     }
 }
 
@@ -147,11 +156,11 @@ class PlayerCar extends Car {
     }
 
     static baseSpeed() {
-        return 5;
+        return 0.8;
     }
 
     static maxSpeed() {
-        return 7;
+        return 2;
     }
 
     constructor(position) {
@@ -161,18 +170,18 @@ class PlayerCar extends Car {
     }
 
     updateSpeed(distanceTraveled) {
-        const newVerticalSpeed = Math.abs(distanceTraveled/5000)+PlayerCar.baseSpeed();
+        const newSpeed = Math.abs(distanceTraveled/50000)+PlayerCar.baseSpeed();
         this.horizontalSpeed = this.verticalSpeed = 
-            (newVerticalSpeed > PlayerCar.maxSpeed()) ? PlayerCar.maxSpeed() : newVerticalSpeed;
+            (newSpeed > PlayerCar.maxSpeed()) ? PlayerCar.maxSpeed() : newSpeed;
     }
 
-    moveLeft(leftBoundary) {
-        const newX = this.position.x-this.horizontalSpeed;
+    moveLeft(leftBoundary, timeDelta) {
+        const newX = this.position.x-this.horizontalSpeed * timeDelta;
         this.position.x = (newX < leftBoundary) ? leftBoundary : newX;
     }
 
-    moveRight(rightBoundary) {
-        const newX = this.position.x+this.horizontalSpeed;
+    moveRight(rightBoundary, timeDelta) {
+        const newX = this.position.x+this.horizontalSpeed * timeDelta;
         this.position.x = (newX > rightBoundary) ? rightBoundary : newX;
     }
 }
@@ -187,7 +196,7 @@ class EnemyCar extends Car {
 
     constructor(position) {
         super(position);
-        this.verticalSpeed = 2;            
+        this.verticalSpeed = 0.45;
     }
 
     physicalParts() {
@@ -227,11 +236,13 @@ class VerticalRelativitySystem {
         this.elements.push(...elementArray);
     }
 
-    moveElements() {
+    moveElements(timeDelta) {
         for (const element of this.elements)
-            element.position.y += this.centerObject.verticalSpeed-element.verticalSpeed;
+            element.position.y += (this.centerObject.verticalSpeed-element.verticalSpeed) * timeDelta;
     }
 }
+
+// Tweak the speed and other constants and it should be fine
 
 const cookieHighScoreKey = 'highscore';
 

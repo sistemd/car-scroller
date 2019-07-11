@@ -16,6 +16,6 @@ export class Cookie {
     }
 
     write(key, value) {
-        this.document.cookie += `${key}=${value};`;
+        this.document.cookie = `${key}=${value}`;
     }
 }

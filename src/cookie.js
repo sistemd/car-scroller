@@ -1,30 +1,21 @@
-define(() => {
-    const cookies = {
-        internal: {}
-    };
+export class Cookie {
+    constructor(document) {
+        this.document = document;
+    }
 
-    cookies.Cookie = class {
-        constructor(document) {
-            this.document = document;
-        }
+    read(key) {
+        const pairWithNeededKey = this.keyValuePairs().find(pair => pair.key === key);
+        return pairWithNeededKey ? pairWithNeededKey.value : undefined;
+    }
 
-        read(key) {
-            const pairHasNeededKey = pair => pair.key === key;
-            const pairWithNeededKey = this.keyValuePairs().find(pairHasNeededKey);
-            return pairWithNeededKey ? pairWithNeededKey.value : undefined;
-        }
+    keyValuePairs() {
+        return this.document.cookie.split('; ').map(piece => {
+            const [key, value] = piece.split('=');
+            return {key, value};
+        });
+    }
 
-        keyValuePairs() {
-            return this.document.cookie.split('; ').map(piece => {
-                const [key, value] = piece.split('=');
-                return {key, value};
-            });
-        }
-
-        write(key, value) {
-            this.document.cookie = `${key}=${value}`;
-        }
-    };
-
-    return cookies;
-});
+    write(key, value) {
+        this.document.cookie += `${key}=${value};`;
+    }
+}

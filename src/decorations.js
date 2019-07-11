@@ -24,4 +24,4 @@ export class RoadDrawing {
             height: roadDrawingHeight
         };
     }
-};
+}

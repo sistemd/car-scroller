@@ -35,7 +35,7 @@ export class Canvas {
     set height(value) {
         this.canvas.height = value;
     }
-};
+}
 
 export class ScoreDisplay {
     constructor(document) {

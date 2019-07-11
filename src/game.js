@@ -204,11 +204,6 @@ class EnemyCar extends Car {
     }
 }
 
-function onScreenCars(cars) {
-    const carIsOnScreen = (car) => car.position.y < -mapHeight;
-    return cars.filter(carIsOnScreen);
-}
-
 function carsCrashed(c1, c2) {
     for (const part1 of c1.physicalParts())
         for (const part2 of c2.physicalParts())
@@ -241,8 +236,6 @@ class VerticalRelativitySystem {
             element.position.y += (this.centerObject.verticalSpeed-element.verticalSpeed) * timeDelta;
     }
 }
-
-// Tweak the speed and other constants and it should be fine
 
 const cookieHighScoreKey = 'highscore';
 

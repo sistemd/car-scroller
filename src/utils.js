@@ -46,24 +46,6 @@ export function randomRange(min, max) {
     return min + Math.floor(Math.random() * (max-min));
 }
 
-export function addPoints(p1, p2) {
-    return {
-        x: p1.x+p2.x,
-        y: p1.y+p2.y
-    };
-}
-
-export function subtractPoints(p1, p2) {
-    return {
-        x: p1.x-p2.x,
-        y: p1.y-p2.y
-    };
-}
-
-export function pointsAreEqual(p1, p2) {
-    return p1.x === p2.x && p1.y === p2.y;
-}
-
 export function rectanglesOverlap(rect1, rect2) {
     return rectanglePoints(rect1).some(point => pointIsInsideRectangle(point, rect2)) ||
             rectanglePoints(rect2).some(point => pointIsInsideRectangle(point, rect1));

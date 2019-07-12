@@ -10,7 +10,7 @@
   "scripts": {
     "build": "webpack",
     "watch": "webpack --watch",
-    "test": "mocha --require babel-register --require babel-polyfill"
+    "test": "mocha --require @babel/register"
   },
   "repository": {
     "type": "git",
@@ -26,8 +26,9 @@
     "@babel/cli": "^7.5.0",
     "@babel/core": "^7.5.4",
     "@babel/preset-env": "^7.5.4",
+    "@babel/register": "^7.4.4",
     "babel-loader": "^8.0.6",
-    "babel-polyfill": "^6.26.0",
+    "chai": "^4.2.0",
     "mocha": "^6.1.4",
     "webpack": "^4.35.3",
     "webpack-cli": "^3.3.5"

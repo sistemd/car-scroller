@@ -1,4 +1,4 @@
-## Instructions
-Left/right arrow keys to move
+https://ennmichael.github.io/car-scroller/
 
-Avoid the other cars
+## Instructions
+Left/right arrow keys to move, avoid the other cars.

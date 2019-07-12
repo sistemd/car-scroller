@@ -20,3 +20,13 @@ div#child {
 div#child > * {
     margin: auto;
 }
+
+div#panel {
+    display: flex;
+    align-items: center;
+}
+
+p#score {
+    margin-right: 5%;
+    text-align: center;
+}

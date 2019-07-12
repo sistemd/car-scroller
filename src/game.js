@@ -13,15 +13,22 @@ const backgroundColor = '#E6E6F5';
 
 export class Game {
     constructor(document) {
-        this.canvas = new Canvas(document);
+        this.canvas = new Canvas();
         this.canvas.width = mapWidth;
         this.canvas.height = mapHeight;
-        this.scoreDisplay = new ScoreDisplay(document);
+        this.scoreDisplay = document.getElementById('score');
+        this.restartButton = document.getElementById('restart');
+        
+        this.restartButton.onclick = () => {
+            this.restart();
+            this.restartButton.hidden = true;
+        };
 
         this.playerCar = PlayerCar.atDefaultPosition();
         this.enemyCars = [];
         this.decorations = [];
         this.distanceTraveled = 0;
+        this.gameOver = false;
         this.cookie = new Cookie(document);
         this.keyHandler = new KeyHandler(document);
 
@@ -34,6 +41,15 @@ export class Game {
             task: () => this.decorations.push(RoadDrawing.atDefaultPosition(mapWidth)),
             milliseconds: () => 350/this.playerCar.verticalSpeed
         });
+    }
+
+    restart() {
+        this.canvas.clear();
+        this.playerCar = PlayerCar.atDefaultPosition();
+        this.enemyCars = [];
+        this.decorations = [];
+        this.distanceTraveled = 0;
+        this.gameOver = false;
     }
 
     run() {
@@ -54,6 +70,7 @@ export class Game {
         if (this.playerCarCrashed()) {
             this.gameOver = true;
             this.showScore();
+            this.restartButton.hidden = false;
         }
     }
 
@@ -64,12 +81,12 @@ export class Game {
     showScore() {
         const score = this.calculateScore();
         const highScore = readHighScore(this.cookie);
-        let outputText = `Final score: ${score}.`;
+        let outputText = `Final score: ${score}`;
         if (!highScore || score > highScore) {
             writeHighScore(this.cookie, score);
-            outputText = `New high score!\n${outputText}`;
+            outputText = `New high score!${outputText}`;
         }
-        alert(outputText);
+        this.scoreDisplay.innerHTML = outputText;
     }
 
     calculateScore() {
@@ -106,7 +123,7 @@ export class Game {
         drawDecorations(this.canvas, this.decorations);
         drawCar(this.canvas, this.playerCar);
         drawCars(this.canvas, this.enemyCars);
-        this.scoreDisplay.update(this.calculateScore());
+        this.scoreDisplay.innerHTML = this.calculateScore();
     }
 
     repeatTaskWhileRunning({task, milliseconds}) {

@@ -1,7 +1,7 @@
 'use strict';
 
 export class Canvas {
-    constructor(document) {
+    constructor() {
         this.canvas = document.getElementById('canvas');
         this.context = this.canvas.getContext('2d');
     }
@@ -42,7 +42,7 @@ export class ScoreDisplay {
         this.p = document.getElementById('score');
     }
 
-    update(value) {
+    setValue(value) {
         this.p.innerHTML = value.toString();
     }
 }
